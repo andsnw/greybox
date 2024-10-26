@@ -1,5 +1,5 @@
 {
-  "contractName": "SafeBank",
-  "contractPath": "contracts/SafeBank.sol",
+  "contractName": "Overflow",
+  "contractPath": "contracts/Overflow.sol",
   "vulnerabilities": []
 }

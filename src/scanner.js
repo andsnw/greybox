@@ -1,7 +1,6 @@
 const fs = require('fs');
 const path = require('path');
 const yaml = require('js-yaml');
-const { ethers } = require("hardhat");
 const { runDynamicTests } = require('./dynamicTester');
 const hre = require("hardhat");
 
@@ -60,16 +59,18 @@ async function scan(contractPath) {
         }));
     }
 
-    const vulnerableResults = staticResults.map((staticResult, index) => {
-        const dynamicResult = dynamicResults[index];
-        if (dynamicResult.result === 'Vulnerable' || dynamicResult.result === 'Error') {
-            return {
-                ...staticResult,
-                dynamicResult: dynamicResult
-            };
-        }
-        return null;
-    }).filter(result => result !== null);
+    const vulnerableResults = staticResults.filter(staticResult =>
+        dynamicResults.some(dynamicResult =>
+            dynamicResult.name === staticResult.name &&
+            (dynamicResult.result === 'Vulnerable' || dynamicResult.result === 'Error')
+        )
+    ).map(staticResult => {
+        const dynamicResult = dynamicResults.find(dr => dr.name === staticResult.name);
+        return {
+            ...staticResult,
+            dynamicResult: dynamicResult
+        };
+    });
 
     const output = {
         contractName: contractName,

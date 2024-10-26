@@ -16,17 +16,13 @@ mitigation:
 
 test_function: |
   const maxUint256 = ethers.constants.MaxUint256;
-  let isVulnerable = false;
 
   // Test depositFunds function for overflow
   if (typeof contract.depositFunds === 'function') {
     const initialBalance = await contract.accountBalances(attacker.address);
     await contract.connect(attacker).depositFunds({ value: 1 }); // Use a small value to avoid actual overflow
     const afterDepositBalance = await contract.accountBalances(attacker.address);
-    if (afterDepositBalance.lte(initialBalance)) {
-      isVulnerable = true;
-      console.log("Potential overflow detected in depositFunds");
-    }
+    expect(afterDepositBalance).to.be.gt(initialBalance, "Overflow might have occurred in depositFunds");
   }
 
   // Test extendLockTime function for overflow
@@ -34,33 +30,20 @@ test_function: |
     const initialLockTime = await contract.withdrawalUnlockTime(attacker.address);
     await contract.connect(attacker).extendLockTime(maxUint256);
     const afterExtendLockTime = await contract.withdrawalUnlockTime(attacker.address);
-    if (afterExtendLockTime.lte(initialLockTime)) {
-      isVulnerable = true;
-      console.log("Potential overflow detected in extendLockTime");
-    }
+    expect(afterExtendLockTime).to.be.gt(initialLockTime, "Overflow might have occurred in extendLockTime");
   }
 
   // Test add function for overflow
   if (typeof contract.add === 'function') {
     const result = await contract.add(maxUint256, 1);
-    if (result.gte(maxUint256)) {
-      isVulnerable = true;
-      console.log("Overflow not detected in add function");
-    }
+    expect(result).to.be.lt(maxUint256, "Overflow not detected in add function");
   }
 
   // Test subtract function for underflow
   if (typeof contract.subtract === 'function') {
     const result = await contract.subtract(0, 1);
-    if (result.eq(0) || result.gt(0)) {
-      isVulnerable = true;
-      console.log("Underflow not detected in subtract function");
-    }
+    expect(result).to.be.gt(0, "Underflow not detected in subtract function");
   }
 
-  if (isVulnerable) {
-    console.log("Contract is vulnerable to integer overflow/underflow");
-  } else {
-    console.log("No integer overflow/underflow vulnerabilities detected");
-  }
-  return isVulnerable;
+  // If we reach here without any of the above checks failing, the contract is vulnerable
+  throw new Error("Contract is vulnerable to integer overflow/underflow");

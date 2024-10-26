@@ -1,4 +1,3 @@
-const { ethers } = require("hardhat");
 const fs = require('fs');
 const path = require('path');
 
@@ -20,10 +19,8 @@ describe("${suite.name} Test", function () {
   });
 
   it("Should check for ${suite.name} vulnerability", async function () {
-    // Wrap the test function in a try-catch to handle potential missing functions
     try {
-      const isVulnerable = await (async () => { ${suite.test_function} })();
-      expect(isVulnerable).to.be.false;
+      ${suite.test_function}
     } catch (error) {
       if (error.message.includes("is not a function")) {
         console.log("Skipping test due to missing function in contract");
@@ -50,52 +47,40 @@ async function runDynamicTests(staticResults, contractName, hre) {
     const results = [];
 
     for (const suite of staticResults) {
-        console.log(`\nGenerating and running dynamic test for: ${suite.name}`);
+        console.log(`\nGenerating dynamic test for: ${suite.name}`);
+        const testFilePath = await generateDynamicTest(contractName, suite, hre);
 
         try {
-            const testFilePath = await generateDynamicTest(contractName, suite, hre);
+            const testResult = await hre.run("run-test", { testFile: testFilePath });
 
-            // Run the generated test
-            try {
-                await hre.run("test", { testFiles: [testFilePath] });
+            if (testResult.status === 'fail') {
+                results.push({
+                    name: suite.name,
+                    result: 'Vulnerable',
+                    testType: 'Dynamic',
+                    error: testResult.error
+                });
+            } else {
                 results.push({
                     name: suite.name,
                     result: 'Safe',
                     testType: 'Dynamic'
                 });
-            } catch (error) {
-                if (error.message.includes("Skipping test due to missing function")) {
-                    results.push({
-                        name: suite.name,
-                        result: 'Skipped',
-                        testType: 'Dynamic',
-                        error: 'Required function not found in contract'
-                    });
-                } else {
-                    // This is the case where we've detected a vulnerability
-                    results.push({
-                        name: suite.name,
-                        result: 'Vulnerable',
-                        testType: 'Dynamic',
-                        error: error.message
-                    });
-                }
             }
-
-            // Clean up the generated test file
-            fs.unlinkSync(testFilePath);
-
         } catch (error) {
-            console.error(`  Error running dynamic test for ${suite.name}: ${error.message}`);
+            console.error(`Error running test for ${suite.name}: ${error.message}`);
             results.push({
                 name: suite.name,
                 result: 'Error',
                 testType: 'Dynamic',
                 error: error.message
             });
+        } finally {
+            fs.unlinkSync(testFilePath);
         }
     }
 
+    console.log("All test results:", JSON.stringify(results, null, 2));
     return results;
 }
 
