@@ -25,3 +25,29 @@ mitigation:
   - Consider using Solidity 0.8.0 or later, which includes built-in overflow checks
   - Use OpenZeppelin's SafeMath for versions prior to Solidity 0.8.0
   - For critical operations, consider using a formal verification tool
+
+payload: |
+  // Test for overflow
+  const maxUint256 = ethers.constants.MaxUint256;
+  let overflowDetected = false;
+
+  try {
+    await contract.add(maxUint256, 1);
+  } catch (error) {
+    if (error.message.includes("overflow")) {
+      overflowDetected = true;
+    }
+  }
+
+  // Test for underflow
+  let underflowDetected = false;
+
+  try {
+    await contract.sub(0, 1);
+  } catch (error) {
+    if (error.message.includes("underflow")) {
+      underflowDetected = true;
+    }
+  }
+
+  return overflowDetected || underflowDetected;

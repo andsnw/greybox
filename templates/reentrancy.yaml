@@ -27,3 +27,9 @@ mitigation:
   - Implement a reentrancy guard using a mutex
   - Use transfer() or send() instead of call() when possible, as they have a gas stipend that prevents reentrancy
   - Consider using OpenZeppelin's ReentrancyGuard contract
+
+payload: |
+  vulnerableContract.deposit{value: 1 ether}();
+  uint initialBalance = address(this).balance;
+  vulnerableContract.withdraw();
+  return address(this).balance > initialBalance;
