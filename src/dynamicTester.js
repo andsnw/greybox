@@ -11,7 +11,7 @@ describe("${suite.name} Test", function () {
   let owner;
   let attacker;
 
-  beforeEach(async function () {
+  before(async function () {
     const Contract = await ethers.getContractFactory("${contractName}");
     contract = await Contract.deploy();
     await contract.deployed();
@@ -19,16 +19,7 @@ describe("${suite.name} Test", function () {
   });
 
   it("Should check for ${suite.name} vulnerability", async function () {
-    try {
-      ${suite.test_function}
-    } catch (error) {
-      if (error.message.includes("is not a function")) {
-        console.log("Skipping test due to missing function in contract");
-        this.skip();
-      } else {
-        throw error;
-      }
-    }
+    ${suite.test_function}
   });
 });
 `;

@@ -2,12 +2,12 @@ require("@nomicfoundation/hardhat-toolbox");
 
 task("run-test", "Runs a single test and returns the result")
   .addParam("testFile", "The test file to run")
-  .setAction(async ({ testFile }, { run }) => {
+  .setAction(async ({ testFile }, hre) => {
     console.log(`Starting test execution for file: ${testFile}`);
     let result = { status: 'pass' };
     try {
       console.log('Running test...');
-      await run("test", { testFiles: [testFile] });
+      await hre.run("test", { testFiles: [testFile] });
       console.log('Test completed successfully');
     } catch (error) {
       console.log(`Test failed with error: ${error.message}`);
