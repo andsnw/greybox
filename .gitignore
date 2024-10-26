@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 spec.txt
 playground/
 
@@ -164,6 +165,8 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
+=======
+>>>>>>> c0c605bfd86b0ceeb7bebd63c836c135549ebc6f
 # Logs
 logs
 *.log
