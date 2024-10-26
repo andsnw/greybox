@@ -2,7 +2,15 @@ document.getElementById('contractFile').addEventListener('change', async (event)
     const file = event.target.files[0];
     if (!file) return;
 
+    const uploadLabel = document.getElementById('uploadLabel');
+    const spinner = document.getElementById('spinner');
+
     try {
+        // Disable upload button and show spinner
+        uploadLabel.classList.add('opacity-50', 'cursor-not-allowed');
+        uploadLabel.setAttribute('for', '');
+        spinner.style.display = 'inline-block';
+
         const contractContent = await file.text();
         const response = await axios.post('/scan', {
             contractContent: contractContent,
@@ -19,6 +27,11 @@ document.getElementById('contractFile').addEventListener('change', async (event)
     } catch (error) {
         console.error('Error:', error);
         document.getElementById('results').innerHTML = `<p class="text-red-500">Error: ${error.message}</p>`;
+    } finally {
+        // Re-enable upload button and hide spinner
+        uploadLabel.classList.remove('opacity-50', 'cursor-not-allowed');
+        uploadLabel.setAttribute('for', 'contractFile');
+        spinner.style.display = 'none';
     }
 });
 
