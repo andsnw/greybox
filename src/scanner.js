@@ -17,7 +17,10 @@ const hre = require("hardhat");
 async function runStaticChecks(checkFile, contractCode, contractName) {
     const checkData = yaml.load(fs.readFileSync(checkFile, 'utf8'));
     console.log(`\nPreparing checks for: ${checkData.name}`);
+    // Strip comments from the test function
+    const strippedTestFunction = checkData.test_function.replace(/\/\/.*$/gm, '').trim();
 
+    // Add the stripped test function to the return object
     return {
         name: checkData.name,
         description: checkData.description,
@@ -25,7 +28,7 @@ async function runStaticChecks(checkFile, contractCode, contractName) {
         mitigation: checkData.mitigation,
         reference: checkData.reference,
         contractName: contractName,
-        test_function: checkData.test_function
+        test_function: strippedTestFunction
     };
 }
 
