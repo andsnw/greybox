@@ -1,0 +1,27 @@
+name: Integer Overflow and Underflow
+description: Check for potential integer overflow and underflow vulnerabilities
+severity: High
+
+patterns:
+  - name: Unchecked arithmetic operations
+    description: Checks for arithmetic operations that might lead to overflow or underflow
+    regex:
+      - '(\+\+|\-\-|\+|\-|\*|\/(?!\/))(?!\s*=\s*\d+)'
+      - '(?<!\w)(uint|int)(?:\d*)\s+\w+\s*=\s*\w+\s*(\+|\-|\*|\/)\s*\w+'
+
+  - name: Use of SafeMath library
+    description: Checks if SafeMath library is not used for arithmetic operations
+    regex:
+      - '(?<!\.)(add|sub|mul|div)\('
+
+  - name: Lack of overflow/underflow checks
+    description: Checks if there are no explicit checks for overflow/underflow
+    regex:
+      - '(?<!require\().*(\+|\-|\*|\/)'
+
+mitigation:
+  - Use SafeMath library for all arithmetic operations
+  - Implement explicit checks before arithmetic operations
+  - Consider using Solidity 0.8.0 or later, which includes built-in overflow checks
+  - Use OpenZeppelin's SafeMath for versions prior to Solidity 0.8.0
+  - For critical operations, consider using a formal verification tool

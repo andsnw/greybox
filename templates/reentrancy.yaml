@@ -1,0 +1,29 @@
+name: Reentrancy
+description: Check for potential reentrancy vulnerabilities
+severity: Critical
+
+patterns:
+  - name: State change after external call
+    description: Checks if there's a state change after an external call
+    regex:
+      - '(\.call\{.*?\}\(.*?\)).*?(=)'
+      - '(\.send\(.*?\)).*?(=)'
+      - '(\.transfer\(.*?\)).*?(=)'
+
+  - name: Multiple external calls in a single function
+    description: Checks for multiple external calls within a single function
+    regex:
+      - '(\.call\{.*?\}\(.*?\)).*?(\.call\{.*?\}\(.*?\))'
+      - '(\.send\(.*?\)).*?(\.send\(.*?\))'
+      - '(\.transfer\(.*?\)).*?(\.transfer\(.*?\))'
+
+  - name: Lack of reentrancy guard
+    description: Checks if there's no reentrancy guard in place
+    regex:
+      - '(?!.*nonReentrant).*function.*?\{'
+
+mitigation:
+  - Use the checks-effects-interactions pattern
+  - Implement a reentrancy guard using a mutex
+  - Use transfer() or send() instead of call() when possible, as they have a gas stipend that prevents reentrancy
+  - Consider using OpenZeppelin's ReentrancyGuard contract
