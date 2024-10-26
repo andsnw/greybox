@@ -15,6 +15,7 @@ describe("${suite.name} Test", function () {
   let attacker;
 
   before(async function () {
+    await hre.run('compile');
     const Contract = await ethers.getContractFactory("${contractName}");
     contract = await Contract.deploy();
     await contract.deployed();
@@ -47,11 +48,11 @@ async function runDynamicTests(staticResults, contractName, hre) {
         try {
             const mocha = new Mocha({
                 reporter: 'json',
-                quiet: true // This suppresses console output from Mocha
+                timeout: 30000, // Increase timeout to 30 seconds
+                quiet: true
             });
 
             mocha.addFile(testFilePath);
-
 
             const jsonOutput = await new Promise((resolve) => {
                 mocha.run()

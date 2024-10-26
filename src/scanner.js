@@ -4,36 +4,43 @@ const yaml = require('js-yaml');
 const { runDynamicTests } = require('./dynamicTester');
 const hre = require("hardhat");
 
-function findLineNumber(code, match) {
+function findLineNumbers(code, match) {
     const lines = code.split('\n');
+    const lineNumbers = [];
     for (let i = 0; i < lines.length; i++) {
         if (lines[i].includes(match)) {
-            return i + 1;
+            lineNumbers.push(i + 1);
         }
     }
-    return -1;
+    return lineNumbers;
 }
 
 async function runStaticChecks(checkFile, contractCode, contractName) {
     const checkData = yaml.load(fs.readFileSync(checkFile, 'utf8'));
     console.log(`\nPreparing checks for: ${checkData.name}`);
 
-    let staticVulnerabilities = [];
+    let staticVulnerabilities = new Set();
 
     for (const pattern of checkData.patterns) {
         for (const regex of pattern.regex) {
             const re = new RegExp(regex, 'g');
             let match;
             while ((match = re.exec(contractCode)) !== null) {
-                staticVulnerabilities.push({
-                    pattern: pattern.name,
-                    description: pattern.description,
-                    match: match[0],
-                    lineNumber: findLineNumber(contractCode, match[0])
+                const lineNumbers = findLineNumbers(contractCode, match[0]);
+                lineNumbers.forEach(lineNumber => {
+                    staticVulnerabilities.add(JSON.stringify({
+                        pattern: pattern.name,
+                        description: pattern.description,
+                        match: match[0],
+                        lineNumber: lineNumber
+                    }));
                 });
             }
         }
     }
+
+    // Convert Set back to array and parse JSON
+    staticVulnerabilities = Array.from(staticVulnerabilities).map(JSON.parse);
 
     // Strip comments from the test function
     const strippedTestFunction = checkData.test_function.replace(/\/\/.*$/gm, '').trim();
@@ -81,27 +88,38 @@ async function scan(contractPath) {
         }));
     }
 
-    const vulnerabilities = staticResults.flatMap(staticResult => {
+    const vulnerabilities = staticResults.map(staticResult => {
         const dynamicResult = dynamicResults.find(dr => dr.name === staticResult.name);
         
-        const staticFindings = staticResult.staticVulnerabilities.map(sv => ({
-            ...staticResult,
-            result: 'Vulnerable',
-            testType: 'Static',
-            vulnerability: sv
-        }));
+        const staticFindings = staticResult.staticVulnerabilities.length > 0
+            ? {
+                result: 'Vulnerable',
+                testType: 'Static',
+                findings: staticResult.staticVulnerabilities
+            }
+            : null;
 
-        const dynamicFinding = dynamicResult && (dynamicResult.result === 'Vulnerable' || dynamicResult.result === 'Error') 
-            ? [{
-                ...staticResult,
+        const dynamicFinding = dynamicResult && (dynamicResult.result === 'Vulnerable' || dynamicResult.result === 'Error')
+            ? {
                 result: dynamicResult.result,
                 testType: 'Dynamic',
                 error: dynamicResult.error
-            }]
-            : [];
+            }
+            : null;
 
-        return [...staticFindings, ...dynamicFinding];
-    });
+        if (staticFindings || dynamicFinding) {
+            return {
+                name: staticResult.name,
+                description: staticResult.description,
+                severity: staticResult.severity,
+                mitigation: staticResult.mitigation,
+                reference: staticResult.reference,
+                staticAnalysis: staticFindings,
+                dynamicAnalysis: dynamicFinding
+            };
+        }
+        return null;
+    }).filter(v => v !== null);
 
     const output = {
         contractName: contractName,

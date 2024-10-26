@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Greybox Scanner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/styles/default.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/languages/solidity.min.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-4">Greybox Scanner</h1>
+        <div class="mb-4 flex space-x-4">
+            <input type="file" id="contractFile" accept=".sol" class="hidden" />
+            <label for="contractFile" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded cursor-pointer">
+                Upload Contract
+            </label>
+            <button id="clearResults" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded hidden">
+                Clear Results
+            </button>
+        </div>
+        <div id="contractCode" class="mt-8 hidden">
+            <h2 class="text-2xl font-bold mb-2">Contract Code</h2>
+            <pre><code class="language-solidity"></code></pre>
+        </div>
+        <div id="results" class="mt-8"></div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>

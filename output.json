@@ -1,61 +1,53 @@
 {
-  "contractName": "GasLimitVulnerable",
-  "contractPath": "contracts/GasLimitVulnerable.sol",
+  "contractName": "Overflow",
+  "contractPath": "contracts/Overflow.sol",
   "vulnerabilities": [
     {
-      "name": "Gas Limit Vulnerability",
-      "description": "Check for potential gas limit vulnerabilities",
+      "name": "Integer Overflow and Underflow",
+      "description": "Check for potential integer overflow and underflow vulnerabilities",
       "severity": "High",
       "mitigation": [
-        "Implement pagination or batching for operations on large data sets",
-        "Use pull payment patterns instead of push for token transfers",
-        "Avoid loops with unbounded gas consumption",
-        "Optimize data structures to reduce gas costs"
+        "Remove 'unchecked' blocks for critical arithmetic operations",
+        "Use SafeMath library for all arithmetic operations in Solidity versions prior to 0.8.0",
+        "Implement explicit checks before arithmetic operations",
+        "For critical operations, consider using a formal verification tool"
       ],
-      "reference": "https://owasp.org/www-project-smart-contract-top-10/2023/en/src/SC09-gas-limit-vulnerabilities.html",
-      "contractName": "GasLimitVulnerable",
-      "test_function": "if (typeof contract.transfer !== 'function') {\n  console.log(\"Contract does not have a transfer function for gas limit vulnerability test\");\n  return;\n}\n\n\nawait owner.sendTransaction({ to: contract.address, value: ethers.utils.parseEther(\"10\") });\n\n\nconst recipient = attacker.address;\nconst largeAmount = ethers.utils.parseEther(\"5\");  \n\n\ntry {\n  await contract.transfer(recipient, largeAmount, { gasLimit: 30000000 });\n  assert(false, \"Transfer succeeded with large amount, potential gas limit vulnerability\");\n} catch (error) {\n  if (error.message.includes(\"gas\") || error.message.includes(\"exceeds gas limit\")) {\n    console.log(\"Gas limit vulnerability detected: transaction ran out of gas\");\n  } else {\n    throw error; \n  }\n}",
-      "staticVulnerabilities": [
-        {
-          "pattern": "Unbounded loop",
-          "description": "Checks for loops that might iterate over large amounts",
-          "match": "for (uint256 i = 0; i < _amount;",
-          "lineNumber": 10
-        }
-      ],
-      "result": "Vulnerable",
-      "testType": "Static",
-      "vulnerability": {
-        "pattern": "Unbounded loop",
-        "description": "Checks for loops that might iterate over large amounts",
-        "match": "for (uint256 i = 0; i < _amount;",
-        "lineNumber": 10
+      "reference": "https://owasp.org/www-project-smart-contract-top-10/2023/en/src/SC02-integer-overflow-underflow.html",
+      "staticAnalysis": {
+        "result": "Vulnerable",
+        "testType": "Static",
+        "findings": [
+          {
+            "pattern": "Unchecked arithmetic operations",
+            "description": "Checks for arithmetic operations that might lead to overflow or underflow",
+            "match": "unchecked {",
+            "lineNumber": 11
+          },
+          {
+            "pattern": "Unchecked arithmetic operations",
+            "description": "Checks for arithmetic operations that might lead to overflow or underflow",
+            "match": "unchecked {",
+            "lineNumber": 19
+          },
+          {
+            "pattern": "Unchecked arithmetic operations",
+            "description": "Checks for arithmetic operations that might lead to overflow or underflow",
+            "match": "unchecked {",
+            "lineNumber": 37
+          },
+          {
+            "pattern": "Unchecked arithmetic operations",
+            "description": "Checks for arithmetic operations that might lead to overflow or underflow",
+            "match": "unchecked {",
+            "lineNumber": 43
+          }
+        ]
+      },
+      "dynamicAnalysis": {
+        "result": "Vulnerable",
+        "testType": "Dynamic",
+        "error": "[{\"title\":\"Should check for Integer Overflow and Underflow vulnerability\",\"fullTitle\":\"Integer Overflow and Underflow Test Should check for Integer Overflow and Underflow vulnerability\",\"file\":\"/Users/snow/Documents/greybox/test/integer_overflow_and_underflow_test.js\",\"duration\":32,\"currentRetry\":0,\"err\":{\"stack\":\"AssertionError [ERR_ASSERTION]: Overflow might have occurred in extendLockTime\\n    at Context.<anonymous> (test/integer_overflow_and_underflow_test.js:34:3)\",\"message\":\"Overflow might have occurred in extendLockTime\",\"generatedMessage\":false,\"name\":\"AssertionError\",\"code\":\"ERR_ASSERTION\",\"actual\":\"false\",\"expected\":\"true\",\"operator\":\"==\"}}]"
       }
-    },
-    {
-      "name": "Gas Limit Vulnerability",
-      "description": "Check for potential gas limit vulnerabilities",
-      "severity": "High",
-      "mitigation": [
-        "Implement pagination or batching for operations on large data sets",
-        "Use pull payment patterns instead of push for token transfers",
-        "Avoid loops with unbounded gas consumption",
-        "Optimize data structures to reduce gas costs"
-      ],
-      "reference": "https://owasp.org/www-project-smart-contract-top-10/2023/en/src/SC09-gas-limit-vulnerabilities.html",
-      "contractName": "GasLimitVulnerable",
-      "test_function": "if (typeof contract.transfer !== 'function') {\n  console.log(\"Contract does not have a transfer function for gas limit vulnerability test\");\n  return;\n}\n\n\nawait owner.sendTransaction({ to: contract.address, value: ethers.utils.parseEther(\"10\") });\n\n\nconst recipient = attacker.address;\nconst largeAmount = ethers.utils.parseEther(\"5\");  \n\n\ntry {\n  await contract.transfer(recipient, largeAmount, { gasLimit: 30000000 });\n  assert(false, \"Transfer succeeded with large amount, potential gas limit vulnerability\");\n} catch (error) {\n  if (error.message.includes(\"gas\") || error.message.includes(\"exceeds gas limit\")) {\n    console.log(\"Gas limit vulnerability detected: transaction ran out of gas\");\n  } else {\n    throw error; \n  }\n}",
-      "staticVulnerabilities": [
-        {
-          "pattern": "Unbounded loop",
-          "description": "Checks for loops that might iterate over large amounts",
-          "match": "for (uint256 i = 0; i < _amount;",
-          "lineNumber": 10
-        }
-      ],
-      "result": "Vulnerable",
-      "testType": "Dynamic",
-      "error": "[{\"title\":\"Should check for Gas Limit Vulnerability vulnerability\",\"fullTitle\":\"Gas Limit Vulnerability Test Should check for Gas Limit Vulnerability vulnerability\",\"file\":\"/Users/snow/Documents/greybox/test/gas_limit_vulnerability_test.js\",\"duration\":11,\"currentRetry\":0,\"err\":{\"stack\":\"Error: cannot estimate gas; transaction may fail or may require manual gas limit [ See: https://links.ethers.org/v5-errors-UNPREDICTABLE_GAS_LIMIT ] (reason=\\\"Transaction reverted: function selector was not recognized and there's no fallback nor receive function\\\", method=\\\"estimateGas\\\", transaction={\\\"from\\\":\\\"0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266\\\",\\\"to\\\":\\\"0x5FbDB2315678afecb367f032d93F642f64180aa3\\\",\\\"value\\\":{\\\"type\\\":\\\"BigNumber\\\",\\\"hex\\\":\\\"0x8ac7230489e80000\\\"},\\\"accessList\\\":null}, error={\\\"stackTrace\\\":[{\\\"type\\\":12,\\\"sourceReference\\\":{\\\"sourceName\\\":\\\"contracts/GasLimitVulnerable.sol\\\",\\\"sourceContent\\\":\\\"// SPDX-License-Identifier: MIT\\\\npragma solidity ^0.8.0;\\\\n\\\\ncontract GasLimitVulnerable {\\\\n    mapping(address => uint256) public balances;\\\\n\\\\n    function transfer(address _to, uint256 _amount) public {\\\\n        require(balances[msg.sender] >= _amount, \\\\\\\"Insufficient balance\\\\\\\");\\\\n\\\\n        for (uint256 i = 0; i < _amount; i++) {  // The loop iterates _amount times, which can be very inefficient and can potentially exceed the block gas limit if _amount is too large.\\\\n            balances[msg.sender]--;\\\\n            balances[_to]++;\\\\n        }\\\\n    }\\\\n}\\\\n\\\",\\\"contract\\\":\\\"GasLimitVulnerable\\\",\\\"line\\\":4,\\\"range\\\":[57,542]}}],\\\"data\\\":\\\"0x\\\"}, code=UNPREDICTABLE_GAS_LIMIT, version=providers/5.7.2)\\n    at Logger.makeError (node_modules/.pnpm/@ethersproject+logger@5.7.0/node_modules/@ethersproject/logger/src.ts/index.ts:269:28)\\n    at Logger.throwError (node_modules/.pnpm/@ethersproject+logger@5.7.0/node_modules/@ethersproject/logger/src.ts/index.ts:281:20)\\n    at checkError (node_modules/.pnpm/@ethersproject+providers@5.7.2_bufferutil@4.0.5_utf-8-validate@5.0.7/node_modules/@ethersproject/providers/src.ts/json-rpc-provider.ts:78:20)\\n    at EthersProviderWrapper.<anonymous> (node_modules/.pnpm/@ethersproject+providers@5.7.2_bufferutil@4.0.5_utf-8-validate@5.0.7/node_modules/@ethersproject/providers/src.ts/json-rpc-provider.ts:642:20)\\n    at step (node_modules/.pnpm/@ethersproject+providers@5.7.2_bufferutil@4.0.5_utf-8-validate@5.0.7/node_modules/@ethersproject/providers/lib/json-rpc-provider.js:48:23)\\n    at Object.throw (node_modules/.pnpm/@ethersproject+providers@5.7.2_bufferutil@4.0.5_utf-8-validate@5.0.7/node_modules/@ethersproject/providers/lib/json-rpc-provider.js:29:53)\\n    at rejected (node_modules/.pnpm/@ethersproject+providers@5.7.2_bufferutil@4.0.5_utf-8-validate@5.0.7/node_modules/@ethersproject/providers/lib/json-rpc-provider.js:21:65)\",\"message\":\"cannot estimate gas; transaction may fail or may require manual gas limit [ See: https://links.ethers.org/v5-errors-UNPREDICTABLE_GAS_LIMIT ] (reason=\\\"Transaction reverted: function selector was not recognized and there's no fallback nor receive function\\\", method=\\\"estimateGas\\\", transaction={\\\"from\\\":\\\"0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266\\\",\\\"to\\\":\\\"0x5FbDB2315678afecb367f032d93F642f64180aa3\\\",\\\"value\\\":{\\\"type\\\":\\\"BigNumber\\\",\\\"hex\\\":\\\"0x8ac7230489e80000\\\"},\\\"accessList\\\":null}, error={\\\"stackTrace\\\":[{\\\"type\\\":12,\\\"sourceReference\\\":{\\\"sourceName\\\":\\\"contracts/GasLimitVulnerable.sol\\\",\\\"sourceContent\\\":\\\"// SPDX-License-Identifier: MIT\\\\npragma solidity ^0.8.0;\\\\n\\\\ncontract GasLimitVulnerable {\\\\n    mapping(address => uint256) public balances;\\\\n\\\\n    function transfer(address _to, uint256 _amount) public {\\\\n        require(balances[msg.sender] >= _amount, \\\\\\\"Insufficient balance\\\\\\\");\\\\n\\\\n        for (uint256 i = 0; i < _amount; i++) {  // The loop iterates _amount times, which can be very inefficient and can potentially exceed the block gas limit if _amount is too large.\\\\n            balances[msg.sender]--;\\\\n            balances[_to]++;\\\\n        }\\\\n    }\\\\n}\\\\n\\\",\\\"contract\\\":\\\"GasLimitVulnerable\\\",\\\"line\\\":4,\\\"range\\\":[57,542]}}],\\\"data\\\":\\\"0x\\\"}, code=UNPREDICTABLE_GAS_LIMIT, version=providers/5.7.2)\",\"reason\":\"Transaction reverted: function selector was not recognized and there's no fallback nor receive function\",\"code\":\"UNPREDICTABLE_GAS_LIMIT\",\"method\":\"estimateGas\",\"transaction\":{\"from\":\"0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266\",\"to\":\"0x5FbDB2315678afecb367f032d93F642f64180aa3\",\"value\":{\"type\":\"BigNumber\",\"hex\":\"0x8ac7230489e80000\"},\"accessList\":null},\"error\":{\"stackTrace\":[{\"type\":12,\"sourceReference\":{\"sourceName\":\"contracts/GasLimitVulnerable.sol\",\"sourceContent\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.8.0;\\n\\ncontract GasLimitVulnerable {\\n    mapping(address => uint256) public balances;\\n\\n    function transfer(address _to, uint256 _amount) public {\\n        require(balances[msg.sender] >= _amount, \\\"Insufficient balance\\\");\\n\\n        for (uint256 i = 0; i < _amount; i++) {  // The loop iterates _amount times, which can be very inefficient and can potentially exceed the block gas limit if _amount is too large.\\n            balances[msg.sender]--;\\n            balances[_to]++;\\n        }\\n    }\\n}\\n\",\"contract\":\"GasLimitVulnerable\",\"line\":4,\"range\":[57,542]}}],\"data\":\"0x\"}}}]"
     }
   ]
 }

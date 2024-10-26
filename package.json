@@ -2,8 +2,9 @@
 	"name": "greybox",
 	"version": "1.0.0",
 	"description": "DAST framework for Ethereum smart contracts",
-	"main": "index.js",
+	"main": "server.js",
 	"scripts": {
+		"start": "node server.js",
 		"test": "hardhat test",
 		"scan": "hardhat run src/scanner.js"
 	},
@@ -11,7 +12,9 @@
 		"ethers": "5.7.2",
 		"hardhat": "^2.14.0",
 		"js-yaml": "^4.1.0",
-		"mocha": "^10.1.0"
+		"mocha": "^10.1.0",
+		"express": "^4.17.1",
+		"multer": "^1.4.3"
 	},
 	"devDependencies": {
 		"@nomicfoundation/hardhat-toolbox": "^2.0.2",
