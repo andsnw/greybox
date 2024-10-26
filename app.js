@@ -71,7 +71,7 @@ function displayContractCode(code, vulnerabilities) {
 
     const highlightedCode = lines.map((line, index) =>
         highlightedLines.has(index)
-            ? `<span class="bg-yellow-200">${line}</span>`
+            ? `<span class="bg-red-800 text-white px-1 block">${line}</span>`
             : line
     ).join('\n');
 
