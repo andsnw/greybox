@@ -1,6 +1,6 @@
-# Greybox - DAST Framework for Ethereum Smart Contracts (EthSydney Hackathon 2024)
+# Greybox - Built during EthSydney Hackathon 2024
 
-Greybox is a Dynamic Application Security Testing (DAST) framework for Ethereum smart contracts, inspired by the Nuclei framework.
+An extensible security assessment framework for Ethereum smart contracts. Detect vulnerabilities in your Solidity contracts from static and dynamic analysis.
 
 ## How It Works
 
@@ -19,6 +19,8 @@ Upon execution, Greybox performs the following steps:
 The framework uses a modular approach with YAML templates for easy addition of new vulnerability checks. It leverages Hardhat for contract deployment and testing, providing a robust environment for dynamic analysis.
 
 ## Installation
+
+Ensure you already have Node.js and pnpm installed.
 
 1. Clone this repository
 2. Install dependencies:
