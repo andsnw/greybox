@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
-const assert = require('assert');
-const { Writable } = require('stream');
+// const assert = require('assert');
+// const { Writable } = require('stream');
 const Mocha = require('mocha');
 
 async function generateDynamicTest(contractName, suite, hre) {
@@ -52,14 +52,13 @@ async function runDynamicTests(staticResults, contractName, hre) {
 
             mocha.addFile(testFilePath);
 
+
             const jsonOutput = await new Promise((resolve) => {
                 mocha.run()
                     .on('end', function () {
                         resolve(this.testResults);
                     });
             });
-
-            console.log('Captured output:', JSON.stringify(jsonOutput, null, 2));
 
             if (jsonOutput.failures && jsonOutput.failures.length > 0) {
                 results.push({
@@ -88,7 +87,7 @@ async function runDynamicTests(staticResults, contractName, hre) {
         }
     }
 
-    console.log("All test results:", JSON.stringify(results, null, 2));
+    console.log("\nAll test results:", JSON.stringify(results, null, 2));
     return results;
 }
 

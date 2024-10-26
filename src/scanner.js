@@ -23,6 +23,7 @@ async function runStaticChecks(checkFile, contractCode, contractName) {
         description: checkData.description,
         severity: checkData.severity,
         mitigation: checkData.mitigation,
+        reference: checkData.reference,
         contractName: contractName,
         test_function: checkData.test_function
     };

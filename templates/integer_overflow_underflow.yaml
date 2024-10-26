@@ -1,6 +1,7 @@
 name: Integer Overflow and Underflow
 description: Check for potential integer overflow and underflow vulnerabilities
 severity: High
+reference: https://owasp.org/www-project-smart-contract-top-10/2023/en/src/SC02-integer-overflow-underflow.html
 
 patterns:
   - name: Unchecked arithmetic operations
