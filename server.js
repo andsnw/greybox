@@ -1,45 +1,67 @@
 const express = require('express');
-const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const { scan } = require('./src/scanner');
-const hre = require("hardhat");
+const { exec } = require('child_process');
+const crypto = require('crypto');
 
 const app = express();
-const upload = multer({ dest: 'uploads/' });
-
+app.use(express.json({ limit: '10mb' }));
 app.use(express.static('.'));
 
-app.post('/scan', upload.single('contract'), async (req, res) => {
-    if (!req.file) {
-        return res.status(400).send('No file uploaded.');
+app.post('/scan', async (req, res) => {
+    if (!req.body.contractContent || !req.body.fileName) {
+        return res.status(400).send('No contract content or file name provided.');
     }
 
     try {
-        // Read the content of the uploaded file
-        const contractContent = fs.readFileSync(req.file.path, 'utf8');
+        let contractContent = req.body.contractContent;
+        const fileName = req.body.fileName;
 
-        // Write the content to a temporary file in the contracts directory
+        // Generate a unique name for the contract
+        const uniqueId = crypto.randomBytes(8).toString('hex');
+        const uniqueContractName = `TempContract_${uniqueId}`;
+
+        // Replace the original contract name with the unique name
+        const contractNameRegex = /contract\s+(\w+)/;
+        const originalContractName = contractContent.match(contractNameRegex)[1];
+        contractContent = contractContent.replace(
+            new RegExp(`contract\\s+${originalContractName}`, 'g'),
+            `contract ${uniqueContractName}`
+        );
+
+        // Write the modified content to a temporary file in the contracts directory
         const contractsDir = path.join(__dirname, 'contracts');
         if (!fs.existsSync(contractsDir)) {
             fs.mkdirSync(contractsDir);
         }
-        const tempContractPath = path.join(contractsDir, `temp_${Date.now()}.sol`);
-        fs.writeFileSync(tempContractPath, contractContent);
+        const tempFilePath = path.join(contractsDir, `${uniqueContractName}.sol`);
+        fs.writeFileSync(tempFilePath, contractContent);
 
-        // Compile the contract
-        await hre.run('compile');
+        // Run the CLI tool
+        await new Promise((resolve, reject) => {
+            exec(`CONTRACT_PATH=${tempFilePath} npm run scan`, (error, stdout, stderr) => {
+                if (error) {
+                    console.error(`exec error: ${error}`);
+                    reject(error);
+                    return;
+                }
+                console.log(`stdout: ${stdout}`);
+                console.error(`stderr: ${stderr}`);
+                resolve();
+            });
+        });
 
-        // Run the scan
-        const result = await scan(tempContractPath);
+        // Read the output.json file
+        const outputPath = path.join(__dirname, 'output.json');
+        const output = JSON.parse(fs.readFileSync(outputPath, 'utf8'));
 
-        // Clean up the temporary file in the contracts directory
-        fs.unlinkSync(tempContractPath);
+        // Clean up the temporary file
+        fs.unlinkSync(tempFilePath);
 
-        res.json(result);
+        res.json(output);
     } catch (error) {
         console.error(error);
-        res.status(500).send('An error occurred during scanning.');
+        res.status(500).send('An error occurred during scanning: ' + error.message);
     }
 });
 

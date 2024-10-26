@@ -2,17 +2,18 @@ document.getElementById('contractFile').addEventListener('change', async (event)
     const file = event.target.files[0];
     if (!file) return;
 
-    const formData = new FormData();
-    formData.append('contract', file);
-
     try {
-        const response = await axios.post('/scan', formData, {
+        const contractContent = await file.text();
+        const response = await axios.post('/scan', {
+            contractContent: contractContent,
+            fileName: file.name
+        }, {
             headers: {
-                'Content-Type': 'multipart/form-data'
+                'Content-Type': 'application/json'
             }
         });
 
-        displayContractCode(await file.text(), response.data.vulnerabilities);
+        displayContractCode(contractContent, response.data.vulnerabilities);
         displayResults(response.data);
         document.getElementById('clearResults').classList.remove('hidden');
     } catch (error) {
