@@ -1,6 +1,6 @@
 # Greybox - DAST Framework for Ethereum Smart Contracts
 
-Greybox is a Dynamic Application Security Testing (DAST) framework for Ethereum smart contracts, inspired by Nuclei for EthSydney Hackathon 2024.
+Greybox is a Dynamic Application Security Testing (DAST) framework for Ethereum smart contracts, inspired by the Nuclei framework.
 
 ## Installation
 

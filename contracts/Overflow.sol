@@ -7,13 +7,17 @@ contract Overflow {
 
     // Allows anyone to deposit ETH and set a lock time
     function depositFunds() external payable {
-        accountBalances[msg.sender] += msg.value;
+        unchecked {
+            accountBalances[msg.sender] += msg.value;
+        }
         withdrawalUnlockTime[msg.sender] = block.timestamp + 1 weeks;
     }
 
     // Vulnerable to overflow, the user could pass a very large value causing overflow
     function extendLockTime(uint256 _additionalSeconds) public {
-        withdrawalUnlockTime[msg.sender] += _additionalSeconds;
+        unchecked {
+            withdrawalUnlockTime[msg.sender] += _additionalSeconds;
+        }
     }
 
     // Allows withdrawals only if the current time is greater than the lock time
@@ -26,5 +30,17 @@ contract Overflow {
 
         (bool successfulWithdrawal,) = msg.sender.call{value: withdrawalAmount}("");
         require(successfulWithdrawal, "Failed to send Ether");
+    }
+
+    function add(uint256 a, uint256 b) public pure returns (uint256) {
+        unchecked {
+            return a + b;
+        }
+    }
+
+    function subtract(uint256 a, uint256 b) public pure returns (uint256) {
+        unchecked {
+            return a - b;
+        }
     }
 }

@@ -2,130 +2,105 @@ const { ethers } = require("hardhat");
 const fs = require('fs');
 const path = require('path');
 
-async function generateMaliciousContract(contractAddress, contractABI, payload, hre) {
-    // Ensure contractABI is an array
-    const abiArray = Array.isArray(contractABI) ? contractABI : JSON.parse(contractABI);
+async function generateDynamicTest(contractName, suite, hre) {
+    const testContent = `
+const { expect } = require("chai");
+const { ethers } = require("hardhat");
 
-    // Generate interface based on the contract ABI
-    const interfaceFunctions = abiArray
-        .filter(item => item.type === 'function')
-        .map(func => {
-            const inputs = func.inputs.map(input => `${input.type} ${input.name}`).join(', ');
-            const outputs = func.outputs ? func.outputs.map(output => output.type).join(', ') : '';
-            return `function ${func.name}(${inputs}) external${func.stateMutability === 'payable' ? ' payable' : ''}${outputs ? ` returns (${outputs})` : ''};`;
-        })
-        .join('\n    ');
+describe("${suite.name} Test", function () {
+  let contract;
+  let owner;
+  let attacker;
 
-    const contractSource = `
-    // SPDX-License-Identifier: MIT
-    pragma solidity ^0.8.0;
+  beforeEach(async function () {
+    const Contract = await ethers.getContractFactory("${contractName}");
+    contract = await Contract.deploy();
+    await contract.deployed();
+    [owner, attacker] = await ethers.getSigners();
+  });
 
-    interface IVulnerableContract {
-        ${interfaceFunctions}
-    }
-
-    contract MaliciousContract {
-        IVulnerableContract public vulnerableContract;
-        bool public attackSuccessful;
-
-        constructor(address _vulnerableContractAddress) {
-            vulnerableContract = IVulnerableContract(_vulnerableContractAddress);
-        }
-
-        function attack() external payable {
-            uint256 initialBalance = address(this).balance;
-            ${payload}
-            attackSuccessful = address(this).balance > initialBalance;
-        }
-
-        receive() external payable {
-            if (address(vulnerableContract).balance >= 1 ether) {
-                vulnerableContract.withdraw();
-            }
-        }
-    }
-    `;
-
-    // Write the contract to a temporary file in the contracts directory
-    const contractsDir = path.join(hre.config.paths.root, 'contracts');
-    const tempFilePath = path.join(contractsDir, 'MaliciousContract.sol');
-    fs.writeFileSync(tempFilePath, contractSource);
-
+  it("Should check for ${suite.name} vulnerability", async function () {
+    // Wrap the test function in a try-catch to handle potential missing functions
     try {
-        // Compile the contract
-        await hre.run('compile');
-
-        // Deploy the contract
-        const MaliciousContractFactory = await hre.ethers.getContractFactory("MaliciousContract");
-        const maliciousContract = await MaliciousContractFactory.deploy(contractAddress);
-        await maliciousContract.deployed();
-
-        return maliciousContract;
-    } finally {
-        // Clean up the temporary file
-        fs.unlinkSync(tempFilePath);
+      ${suite.test_function}
+    } catch (error) {
+      if (error.message.includes("is not a function")) {
+        console.log("Skipping test due to missing function in contract");
+        this.skip();
+      } else {
+        throw error;
+      }
     }
+  });
+});
+`;
+
+    const testsDir = path.join(hre.config.paths.root, 'test');
+    if (!fs.existsSync(testsDir)) {
+        fs.mkdirSync(testsDir);
+    }
+    const testFilePath = path.join(testsDir, `${suite.name.toLowerCase().replace(/\s+/g, '_')}_test.js`);
+    fs.writeFileSync(testFilePath, testContent);
+
+    return testFilePath;
 }
 
 async function runDynamicTests(staticResults, contractName, hre) {
     const results = [];
 
-    try {
-        const Contract = await ethers.getContractFactory(contractName);
-        const contract = await Contract.deploy();
-        await contract.deployed();
+    for (const suite of staticResults) {
+        console.log(`\nGenerating and running dynamic test for: ${suite.name}`);
 
-        console.log(`Contract deployed at: ${contract.address}`);
+        try {
+            const testFilePath = await generateDynamicTest(contractName, suite, hre);
 
-        const [owner, attacker] = await ethers.getSigners();
-
-        for (const suite of staticResults) {
-            console.log(`\nRunning dynamic test for: ${suite.name}`);
-
+            // Run the generated test
             try {
-                let payloadResult;
-                if (suite.name.toLowerCase().includes('reentrancy')) {
-                    // For reentrancy, we need to deploy a malicious contract
-                    const maliciousContract = await generateMaliciousContract(
-                        contract.address,
-                        Contract.interface.format(ethers.utils.FormatTypes.json),
-                        suite.payload,
-                        hre
-                    );
-
-                    // Fund the malicious contract
-                    await owner.sendTransaction({
-                        to: maliciousContract.address,
-                        value: ethers.utils.parseEther("2")
-                    });
-
-                    // Attempt the attack
-                    await maliciousContract.attack({ value: ethers.utils.parseEther("1") });
-                    payloadResult = await maliciousContract.attackSuccessful();
-                } else {
-                    // For other vulnerabilities, we can run the payload directly
-                    payloadResult = await eval(`(async () => { ${suite.payload} })()`);
-                }
-
+                await hre.run("test", { testFiles: [testFilePath] });
                 results.push({
                     name: suite.name,
-                    result: payloadResult ? 'Vulnerable' : 'Safe',
+                    result: 'Safe',
                     testType: 'Dynamic'
                 });
-
-                console.log(`  Result: ${payloadResult ? 'Vulnerable' : 'Safe'}`);
             } catch (error) {
-                console.error(`  Error running dynamic test for ${suite.name}: ${error.message}`);
-                results.push({
-                    name: suite.name,
-                    result: 'Error',
-                    testType: 'Dynamic',
-                    error: error.message
-                });
+                if (error.message.includes("Skipping test due to missing function")) {
+                    results.push({
+                        name: suite.name,
+                        result: 'Skipped',
+                        testType: 'Dynamic',
+                        error: 'Required function not found in contract'
+                    });
+                } else if (error.message.includes("Contract is vulnerable")) {
+                    // This is the case where we've detected a vulnerability
+                    results.push({
+                        name: suite.name,
+                        result: 'Vulnerable',
+                        testType: 'Dynamic',
+                        error: error.message
+                    });
+                } else {
+                    // Any other error is treated as a potential vulnerability
+                    results.push({
+                        name: suite.name,
+                        result: 'Vulnerable',
+                        testType: 'Dynamic',
+                        error: error.message
+                    });
+                }
             }
+
+            // Clean up the generated test file
+            fs.unlinkSync(testFilePath);
+
+        } catch (error) {
+            console.error(`  Error running dynamic test for ${suite.name}: ${error.message}`);
+            results.push({
+                name: suite.name,
+                result: 'Error',
+                testType: 'Dynamic',
+                error: error.message
+            });
         }
-    } catch (error) {
-        throw new Error(`Failed to deploy contract: ${error.message}`);
     }
 
     return results;

@@ -4,47 +4,28 @@ const yaml = require('js-yaml');
 const { ethers } = require("hardhat");
 const { runDynamicTests } = require('./dynamicTester');
 const hre = require("hardhat");
-function findLineNumber(code, match) {
-    const lines = code.split('\n');
-    for (let i = 0; i < lines.length; i++) {
-        if (lines[i].includes(match)) {
-            return i + 1;
-        }
-    }
-    return -1;
-}
+
+// function findLineNumber(code, match) {
+//     const lines = code.split('\n');
+//     for (let i = 0; i < lines.length; i++) {
+//         if (lines[i].includes(match)) {
+//             return i + 1;
+//         }
+//     }
+//     return -1;
+// }
 
 async function runStaticChecks(checkFile, contractCode, contractName) {
     const checkData = yaml.load(fs.readFileSync(checkFile, 'utf8'));
-    console.log(`\nRunning static checks for: ${checkData.name}`);
-
-    let vulnerabilities = [];
-
-    for (const pattern of checkData.patterns) {
-        console.log(`\n  Checking pattern: ${pattern.name}`);
-        for (const regex of pattern.regex) {
-            const re = new RegExp(regex, 'g');
-            let match;
-            while ((match = re.exec(contractCode)) !== null) {
-                console.log(`    Found potential vulnerability: ${match[0]}`);
-                vulnerabilities.push({
-                    pattern: pattern.name,
-                    description: pattern.description,
-                    match: match[0],
-                    lineNumber: findLineNumber(contractCode, match[0])
-                });
-            }
-        }
-    }
+    console.log(`\nPreparing checks for: ${checkData.name}`);
 
     return {
         name: checkData.name,
         description: checkData.description,
         severity: checkData.severity,
-        vulnerabilities: vulnerabilities,
         mitigation: checkData.mitigation,
         contractName: contractName,
-        payload: checkData.payload
+        test_function: checkData.test_function
     };
 }
 
@@ -65,34 +46,40 @@ async function scan(contractPath) {
     );
 
     console.log("\nRunning dynamic tests...");
+    let dynamicResults;
     try {
-        const dynamicResults = await runDynamicTests(staticResults, contractName, hre);
-
-        const results = staticResults.map((staticResult, index) => {
-            const dynamicResult = dynamicResults[index];
-            if (dynamicResult.result === 'Vulnerable') {
-                return {
-                    ...staticResult,
-                    dynamicResult: dynamicResult
-                };
-            }
-            return null;
-        }).filter(result => result !== null);
-
-        const output = {
-            contractName: contractName,
-            contractPath: contractPath,
-            vulnerabilities: results
-        };
-
-        fs.writeFileSync('output.json', JSON.stringify(output, null, 2));
-        console.log('\nScan complete. Results saved to output.json');
-        return output;
+        dynamicResults = await runDynamicTests(staticResults, contractName, hre);
     } catch (error) {
         console.error('Error during dynamic testing:');
         console.error(error);
-        process.exit(1);
+        dynamicResults = staticResults.map(result => ({
+            name: result.name,
+            result: 'Error',
+            testType: 'Dynamic',
+            error: error.message
+        }));
     }
+
+    const vulnerableResults = staticResults.map((staticResult, index) => {
+        const dynamicResult = dynamicResults[index];
+        if (dynamicResult.result === 'Vulnerable' || dynamicResult.result === 'Error') {
+            return {
+                ...staticResult,
+                dynamicResult: dynamicResult
+            };
+        }
+        return null;
+    }).filter(result => result !== null);
+
+    const output = {
+        contractName: contractName,
+        contractPath: contractPath,
+        vulnerabilities: vulnerableResults
+    };
+
+    fs.writeFileSync('output.json', JSON.stringify(output, null, 2));
+    console.log('\nScan complete. Results saved to output.json');
+    return output;
 }
 
 // Main function

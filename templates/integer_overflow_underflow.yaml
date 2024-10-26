@@ -6,48 +6,44 @@ patterns:
   - name: Unchecked arithmetic operations
     description: Checks for arithmetic operations that might lead to overflow or underflow
     regex:
-      - '(\+\+|\-\-|\+|\-|\*|\/(?!\/))(?!\s*=\s*\d+)'
-      - '(?<!\w)(uint|int)(?:\d*)\s+\w+\s*=\s*\w+\s*(\+|\-|\*|\/)\s*\w+'
-
-  - name: Use of SafeMath library
-    description: Checks if SafeMath library is not used for arithmetic operations
-    regex:
-      - '(?<!\.)(add|sub|mul|div)\('
-
-  - name: Lack of overflow/underflow checks
-    description: Checks if there are no explicit checks for overflow/underflow
-    regex:
-      - '(?<!require\().*(\+|\-|\*|\/)'
+      - 'unchecked\s*\{'
 
 mitigation:
-  - Use SafeMath library for all arithmetic operations
+  - Remove 'unchecked' blocks for critical arithmetic operations
+  - Use SafeMath library for all arithmetic operations in Solidity versions prior to 0.8.0
   - Implement explicit checks before arithmetic operations
-  - Consider using Solidity 0.8.0 or later, which includes built-in overflow checks
-  - Use OpenZeppelin's SafeMath for versions prior to Solidity 0.8.0
   - For critical operations, consider using a formal verification tool
 
-payload: |
-  // Test for overflow
+test_function: |
   const maxUint256 = ethers.constants.MaxUint256;
-  let overflowDetected = false;
 
-  try {
-    await contract.add(maxUint256, 1);
-  } catch (error) {
-    if (error.message.includes("overflow")) {
-      overflowDetected = true;
-    }
+  // Test depositFunds function for overflow
+  if (typeof contract.depositFunds === 'function') {
+    const initialBalance = await contract.accountBalances(attacker.address);
+    await contract.connect(attacker).depositFunds({ value: 1 }); // Use a small value to avoid actual overflow
+    const afterDepositBalance = await contract.accountBalances(attacker.address);
+    expect(afterDepositBalance).to.be.gt(initialBalance, "Overflow might have occurred in depositFunds");
   }
 
-  // Test for underflow
-  let underflowDetected = false;
-
-  try {
-    await contract.sub(0, 1);
-  } catch (error) {
-    if (error.message.includes("underflow")) {
-      underflowDetected = true;
-    }
+  // Test extendLockTime function for overflow
+  if (typeof contract.extendLockTime === 'function') {
+    const initialLockTime = await contract.withdrawalUnlockTime(attacker.address);
+    await contract.connect(attacker).extendLockTime(maxUint256);
+    const afterExtendLockTime = await contract.withdrawalUnlockTime(attacker.address);
+    expect(afterExtendLockTime).to.be.gt(initialLockTime, "Overflow might have occurred in extendLockTime");
   }
 
-  return overflowDetected || underflowDetected;
+  // Test add function for overflow
+  if (typeof contract.add === 'function') {
+    const result = await contract.add(maxUint256, 1);
+    expect(result).to.be.lt(maxUint256, "Overflow not detected in add function");
+  }
+
+  // Test subtract function for underflow
+  if (typeof contract.subtract === 'function') {
+    const result = await contract.subtract(0, 1);
+    expect(result).to.be.gt(0, "Underflow not detected in subtract function");
+  }
+
+  // If we reach here without any of the above checks failing, the contract is vulnerable
+  throw new Error("Contract is vulnerable to integer overflow/underflow");
