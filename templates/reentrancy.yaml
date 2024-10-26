@@ -1,0 +1,85 @@
+name: Reentrancy
+description: Check for potential reentrancy vulnerabilities
+severity: Critical
+
+patterns:
+  - name: State change after external call
+    description: Checks if there's a state change after an external call
+    regex:
+      - '(\.call\{.*?\}\(.*?\)).*?(=)'
+      - '(\.send\(.*?\)).*?(=)'
+      - '(\.transfer\(.*?\)).*?(=)'
+
+  - name: Multiple external calls in a single function
+    description: Checks for multiple external calls within a single function
+    regex:
+      - '(\.call\{.*?\}\(.*?\)).*?(\.call\{.*?\}\(.*?\))'
+      - '(\.send\(.*?\)).*?(\.send\(.*?\))'
+      - '(\.transfer\(.*?\)).*?(\.transfer\(.*?\))'
+
+  - name: Lack of reentrancy guard
+    description: Checks if there's no reentrancy guard in place
+    regex:
+      - '(?!.*nonReentrant).*function.*?\{'
+
+mitigation:
+  - Use the checks-effects-interactions pattern
+  - Implement a reentrancy guard using a mutex
+  - Use transfer() or send() instead of call() when possible, as they have a gas stipend that prevents reentrancy
+  - Consider using OpenZeppelin's ReentrancyGuard contract
+
+initial_balance: "2"
+attack_value: "1"
+
+attack_function: |
+  vulnerableContract.deposit{value: 1 ether}();
+  vulnerableContract.withdraw();
+
+receive_function: |
+  if (address(vulnerableContract).balance >= 1 ether) {
+    vulnerableContract.withdraw();
+  }
+
+check_vulnerability: |
+  return address(this).balance > initialBalance;
+
+test_function: |
+  // Check for deposit-like function
+  const depositFunction = contract.deposit || contract.addBalance || contract.fund;
+  if (!depositFunction) {
+    console.log("Contract does not have a deposit-like function for reentrancy test");
+    return;
+  }
+
+  // Check for withdraw-like function
+  const withdrawFunction = contract.withdraw || contract.removeBalance || contract.drain;
+  if (!withdrawFunction) {
+    console.log("Contract does not have a withdraw-like function for reentrancy test");
+    return;
+  }
+
+  // Fund the contract
+  await depositFunction.call(contract, { value: ethers.utils.parseEther("2") });
+
+  // Deploy attacker contract
+  const AttackerFactory = await ethers.getContractFactory("ReentrancyAttacker");
+  const attacker = await AttackerFactory.deploy(contract.address);
+
+  // Fund attacker
+  await owner.sendTransaction({ to: attacker.address, value: ethers.utils.parseEther("1") });
+
+  // Record initial balances
+  const initialContractBalance = await ethers.provider.getBalance(contract.address);
+  const initialAttackerBalance = await ethers.provider.getBalance(attacker.address);
+
+  // Perform attack
+  await attacker.attack({ value: ethers.utils.parseEther("1") });
+
+  // Check if attack was successful
+  const finalContractBalance = await ethers.provider.getBalance(contract.address);
+  const finalAttackerBalance = await ethers.provider.getBalance(attacker.address);
+
+  const contractBalanceReduced = finalContractBalance.lt(initialContractBalance);
+  const attackerBalanceIncreased = finalAttackerBalance.gt(initialAttackerBalance);
+
+  expect(contractBalanceReduced || attackerBalanceIncreased, "Reentrancy attack succeeded").to.be.true;

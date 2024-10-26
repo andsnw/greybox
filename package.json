@@ -10,7 +10,8 @@
 	"dependencies": {
 		"ethers": "5.7.2",
 		"hardhat": "^2.14.0",
-		"js-yaml": "^4.1.0"
+		"js-yaml": "^4.1.0",
+		"mocha": "^10.1.0"
 	},
 	"devDependencies": {
 		"@nomicfoundation/hardhat-toolbox": "^2.0.2",

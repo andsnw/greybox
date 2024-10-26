@@ -1,9 +1,12 @@
 const fs = require('fs');
 const path = require('path');
+const assert = require('assert');
+const { Writable } = require('stream');
+const Mocha = require('mocha');
 
 async function generateDynamicTest(contractName, suite, hre) {
     const testContent = `
-const { expect } = require("chai");
+const assert = require('assert');
 const { ethers } = require("hardhat");
 
 describe("${suite.name} Test", function () {
@@ -42,17 +45,28 @@ async function runDynamicTests(staticResults, contractName, hre) {
         const testFilePath = await generateDynamicTest(contractName, suite, hre);
 
         try {
-            const testResult = await hre.run("run-test", { testFile: testFilePath });
+            const mocha = new Mocha({
+                reporter: 'json',
+                quiet: true // This suppresses console output from Mocha
+            });
 
-            if (testResult.status === 'fail') {
-                const errorDetails = testResult.testResults.length > 0 
-                    ? testResult.testResults[0].error 
-                    : testResult.error;
+            mocha.addFile(testFilePath);
+
+            const jsonOutput = await new Promise((resolve) => {
+                mocha.run()
+                    .on('end', function () {
+                        resolve(this.testResults);
+                    });
+            });
+
+            console.log('Captured output:', JSON.stringify(jsonOutput, null, 2));
+
+            if (jsonOutput.failures && jsonOutput.failures.length > 0) {
                 results.push({
                     name: suite.name,
                     result: 'Vulnerable',
                     testType: 'Dynamic',
-                    error: errorDetails
+                    error: JSON.stringify(jsonOutput.failures)
                 });
             } else {
                 results.push({

@@ -22,7 +22,7 @@ test_function: |
     const initialBalance = await contract.accountBalances(attacker.address);
     await contract.connect(attacker).depositFunds({ value: 1 }); // Use a small value to avoid actual overflow
     const afterDepositBalance = await contract.accountBalances(attacker.address);
-    expect(afterDepositBalance).to.be.gt(initialBalance, "Overflow might have occurred in depositFunds");
+    assert(afterDepositBalance.gt(initialBalance), "Overflow might have occurred in depositFunds");
   }
 
   // Test extendLockTime function for overflow
@@ -30,20 +30,20 @@ test_function: |
     const initialLockTime = await contract.withdrawalUnlockTime(attacker.address);
     await contract.connect(attacker).extendLockTime(maxUint256);
     const afterExtendLockTime = await contract.withdrawalUnlockTime(attacker.address);
-    expect(afterExtendLockTime).to.be.gt(initialLockTime, "Overflow might have occurred in extendLockTime");
+    assert(afterExtendLockTime.gt(initialLockTime), "Overflow might have occurred in extendLockTime");
   }
 
   // Test add function for overflow
   if (typeof contract.add === 'function') {
     const result = await contract.add(maxUint256, 1);
-    expect(result).to.be.lt(maxUint256, "Overflow not detected in add function");
+    assert(result.lt(maxUint256), "Overflow not detected in add function");
   }
 
   // Test subtract function for underflow
   if (typeof contract.subtract === 'function') {
     const result = await contract.subtract(0, 1);
-    expect(result).to.be.gt(0, "Underflow not detected in subtract function");
+    assert(result.gt(0), "Underflow not detected in subtract function");
   }
 
-  // If we reach here without any of the above checks failing, the contract is vulnerable
-  throw new Error("Contract is vulnerable to integer overflow/underflow");
+  // If the test didn't fail, the contract is not vulnerable
+  console.log("Test passed")
