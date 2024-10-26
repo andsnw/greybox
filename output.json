@@ -1,1 +1,53 @@
-{}
+{
+  "contractName": "Overflow",
+  "contractPath": "contracts/Overflow.sol",
+  "vulnerabilities": [
+    {
+      "name": "Integer Overflow and Underflow",
+      "description": "Check for potential integer overflow and underflow vulnerabilities. These occur when arithmetic operations exceed a variable's data type limits, leading to unexpected behavior in smart contracts. Risks include incorrect balance calculations, bypassing time-based restrictions, and corrupting critical state variables. The impact can be severe, resulting in financial losses, contract malfunctions, or complete compromise of intended functionality. In high-stakes financial applications, these vulnerabilities can cause significant monetary damage and erode user trust.\n",
+      "severity": "High",
+      "mitigation": [
+        "Remove 'unchecked' blocks for critical arithmetic operations",
+        "Use SafeMath library for all arithmetic operations in Solidity versions prior to 0.8.0",
+        "Implement explicit checks before arithmetic operations",
+        "For critical operations, consider using a formal verification tool"
+      ],
+      "reference": "https://owasp.org/www-project-smart-contract-top-10/2023/en/src/SC02-integer-overflow-underflow.html",
+      "staticAnalysis": {
+        "result": "Vulnerable",
+        "testType": "Static",
+        "findings": [
+          {
+            "pattern": "Unchecked arithmetic operations",
+            "description": "Checks for arithmetic operations that might lead to overflow or underflow",
+            "match": "unchecked {",
+            "lineNumber": 11
+          },
+          {
+            "pattern": "Unchecked arithmetic operations",
+            "description": "Checks for arithmetic operations that might lead to overflow or underflow",
+            "match": "unchecked {",
+            "lineNumber": 19
+          },
+          {
+            "pattern": "Unchecked arithmetic operations",
+            "description": "Checks for arithmetic operations that might lead to overflow or underflow",
+            "match": "unchecked {",
+            "lineNumber": 37
+          },
+          {
+            "pattern": "Unchecked arithmetic operations",
+            "description": "Checks for arithmetic operations that might lead to overflow or underflow",
+            "match": "unchecked {",
+            "lineNumber": 43
+          }
+        ]
+      },
+      "dynamicAnalysis": {
+        "result": "Vulnerable",
+        "testType": "Dynamic",
+        "error": "[{\"title\":\"Should check for Integer Overflow and Underflow vulnerability\",\"fullTitle\":\"Integer Overflow and Underflow Test Should check for Integer Overflow and Underflow vulnerability\",\"file\":\"/Users/snow/Documents/greybox/test/integer_overflow_and_underflow_test.js\",\"duration\":30,\"currentRetry\":0,\"err\":{\"stack\":\"AssertionError [ERR_ASSERTION]: Overflow might have occurred in extendLockTime\\n    at Context.<anonymous> (test/integer_overflow_and_underflow_test.js:34:3)\",\"message\":\"Overflow might have occurred in extendLockTime\",\"generatedMessage\":false,\"name\":\"AssertionError\",\"code\":\"ERR_ASSERTION\",\"actual\":\"false\",\"expected\":\"true\",\"operator\":\"==\"}}]"
+      }
+    }
+  ]
+}

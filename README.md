@@ -30,6 +30,8 @@ The framework uses a modular approach with YAML templates for easy addition of n
 
 ### Web UI
 
+A web UI for this repo is provided. Currently, it only supports local viewing on the same host machine that runs the Greybox framework.
+
 To run the web-based user interface:
 
 1. Start the server:
@@ -72,5 +74,5 @@ After the scan completes, results of vulnerabilities will be saved in the `outpu
 To add a new vulnerability check:
 
 1. Create a new YAML file in the `templates` directory.
-2. Define the vulnerability patterns, description, and test functions in the YAML file.
+2. Define the vulnerability patterns, description, and test functions in the YAML file. You can use the existing templates as a reference.
 3. The scanner will automatically pick up and use the new template in subsequent scans.
