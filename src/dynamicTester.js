@@ -22,7 +22,8 @@ describe("${suite.name} Test", function () {
   it("Should check for ${suite.name} vulnerability", async function () {
     // Wrap the test function in a try-catch to handle potential missing functions
     try {
-      ${suite.test_function}
+      const isVulnerable = await (async () => { ${suite.test_function} })();
+      expect(isVulnerable).to.be.false;
     } catch (error) {
       if (error.message.includes("is not a function")) {
         console.log("Skipping test due to missing function in contract");
@@ -70,16 +71,8 @@ async function runDynamicTests(staticResults, contractName, hre) {
                         testType: 'Dynamic',
                         error: 'Required function not found in contract'
                     });
-                } else if (error.message.includes("Contract is vulnerable")) {
-                    // This is the case where we've detected a vulnerability
-                    results.push({
-                        name: suite.name,
-                        result: 'Vulnerable',
-                        testType: 'Dynamic',
-                        error: error.message
-                    });
                 } else {
-                    // Any other error is treated as a potential vulnerability
+                    // This is the case where we've detected a vulnerability
                     results.push({
                         name: suite.name,
                         result: 'Vulnerable',
