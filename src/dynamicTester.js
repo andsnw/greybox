@@ -45,11 +45,14 @@ async function runDynamicTests(staticResults, contractName, hre) {
             const testResult = await hre.run("run-test", { testFile: testFilePath });
 
             if (testResult.status === 'fail') {
+                const errorDetails = testResult.testResults.length > 0 
+                    ? testResult.testResults[0].error 
+                    : testResult.error;
                 results.push({
                     name: suite.name,
                     result: 'Vulnerable',
                     testType: 'Dynamic',
-                    error: testResult.error
+                    error: errorDetails
                 });
             } else {
                 results.push({
