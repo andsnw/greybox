@@ -33,7 +33,9 @@ async function generateMaliciousContract(contractAddress, contractABI, payload, 
         }
 
         function attack() external payable {
+            uint256 initialBalance = address(this).balance;
             ${payload}
+            attackSuccessful = address(this).balance > initialBalance;
         }
 
         receive() external payable {

@@ -30,6 +30,4 @@ mitigation:
 
 payload: |
   vulnerableContract.deposit{value: 1 ether}();
-  uint initialBalance = address(this).balance;
   vulnerableContract.withdraw();
-  return address(this).balance > initialBalance;
