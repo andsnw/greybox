@@ -26,6 +26,42 @@
         .spinner {
             border-top-color: #3498db;
         }
+
+        .line-numbers {
+            counter-reset: line;
+            padding-left: 3em;
+            position: relative;
+        }
+        .line-numbers > span {
+            display: block;
+            position: relative;
+        }
+        .line-numbers > span:before {
+            counter-increment: line;
+            content: counter(line);
+            position: absolute;
+            left: -3em;
+            width: 2.5em;
+            text-align: right;
+            color: #999;
+        }
+        .code-line {
+            display: flex;
+            padding: 0 0.5rem;
+        }
+        .line-number {
+            user-select: none;
+            text-align: right;
+            padding-right: 1rem;
+            min-width: 2.5rem;
+            color: #999;
+        }
+        .line-content {
+            white-space: pre;
+        }
+        .bg-red-800 {
+            background-color: rgba(153, 27, 27, 0.5);
+        }
     </style>
 </head>
 

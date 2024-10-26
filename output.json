@@ -1,6 +1,6 @@
 {
-  "contractName": "TempContract_4a640a7551081032",
-  "contractPath": "/Users/snow/Documents/greybox/contracts/TempContract_4a640a7551081032.sol",
+  "contractName": "TempContract_ec453ad2f892d56b",
+  "contractPath": "/Users/snow/Documents/greybox/contracts/TempContract_ec453ad2f892d56b.sol",
   "vulnerabilities": [
     {
       "name": "Integer Overflow and Underflow",
@@ -46,7 +46,7 @@
       "dynamicAnalysis": {
         "result": "Vulnerable",
         "testType": "Dynamic",
-        "error": "[{\"title\":\"Should check for Integer Overflow and Underflow vulnerability\",\"fullTitle\":\"Integer Overflow and Underflow Test Should check for Integer Overflow and Underflow vulnerability\",\"file\":\"/Users/snow/Documents/greybox/test/integer_overflow_and_underflow_test.js\",\"duration\":28,\"currentRetry\":0,\"err\":{\"stack\":\"AssertionError [ERR_ASSERTION]: Overflow might have occurred in extendLockTime\\n    at Context.<anonymous> (test/integer_overflow_and_underflow_test.js:34:3)\",\"message\":\"Overflow might have occurred in extendLockTime\",\"generatedMessage\":false,\"name\":\"AssertionError\",\"code\":\"ERR_ASSERTION\",\"actual\":\"false\",\"expected\":\"true\",\"operator\":\"==\"}}]"
+        "error": "[{\"title\":\"Should check for Integer Overflow and Underflow vulnerability\",\"fullTitle\":\"Integer Overflow and Underflow Test Should check for Integer Overflow and Underflow vulnerability\",\"file\":\"/Users/snow/Documents/greybox/test/integer_overflow_and_underflow_test.js\",\"duration\":30,\"currentRetry\":0,\"err\":{\"stack\":\"AssertionError [ERR_ASSERTION]: Overflow might have occurred in extendLockTime\\n    at Context.<anonymous> (test/integer_overflow_and_underflow_test.js:34:3)\",\"message\":\"Overflow might have occurred in extendLockTime\",\"generatedMessage\":false,\"name\":\"AssertionError\",\"code\":\"ERR_ASSERTION\",\"actual\":\"false\",\"expected\":\"true\",\"operator\":\"==\"}}]"
       }
     }
   ]

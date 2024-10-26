@@ -69,11 +69,12 @@ function displayContractCode(code, vulnerabilities) {
         }
     });
 
-    const highlightedCode = lines.map((line, index) =>
-        highlightedLines.has(index)
-            ? `<span class="bg-red-800 text-white px-1 block">${line}</span>`
-            : line
-    ).join('\n');
+    const highlightedCode = lines.map((line, index) => 
+        `<div class="code-line ${highlightedLines.has(index) ? 'bg-red-800 text-white' : ''}">
+            <span class="line-number">${index + 1}</span>
+            <span class="line-content">${line}</span>
+         </div>`
+    ).join('');
 
     codeElement.innerHTML = highlightedCode;
     document.getElementById('contractCode').classList.remove('hidden');
@@ -84,45 +85,66 @@ function displayResults(data) {
     resultsDiv.innerHTML = '';
 
     if (data.vulnerabilities.length === 0) {
-        resultsDiv.innerHTML = '<p class="text-green-500">No vulnerabilities found.</p>';
+        resultsDiv.innerHTML = '<p class="text-green-500 font-bold text-xl">No vulnerabilities found.</p>';
         return;
     }
 
     data.vulnerabilities.forEach(vuln => {
         const vulnDiv = document.createElement('div');
-        vulnDiv.className = 'mb-4 p-4 bg-white rounded shadow';
+        vulnDiv.className = 'mb-8 p-6 bg-white rounded-lg shadow-md border-l-4 border-red-500';
+
+        const severityColor = vuln.severity === 'Critical' ? 'text-red-600' : 
+                              vuln.severity === 'High' ? 'text-orange-500' :
+                              vuln.severity === 'Medium' ? 'text-yellow-500' : 'text-blue-500';
 
         vulnDiv.innerHTML = `
-            <h2 class="text-xl font-bold">${vuln.name}</h2>
-            <p class="text-gray-700">${vuln.description}</p>
-            <p class="text-sm text-gray-500">Severity: ${vuln.severity}</p>
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold text-gray-800">${vuln.name}</h2>
+                <span class="px-3 py-1 ${severityColor} font-semibold rounded-full bg-gray-100">
+                    ${vuln.severity}
+                </span>
+            </div>
+            <p class="text-gray-600 mb-4">${vuln.description}</p>
             ${vuln.staticAnalysis ? `
-                <div class="mt-2">
-                    <p class="font-semibold">Static Analysis:</p>
+                <div class="mb-4">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Static Analysis:</h3>
                     ${vuln.staticAnalysis.findings.map(finding => `
-                        <pre class="bg-gray-100 p-2 rounded mt-1">${finding.match}</pre>
-                        <p class="text-sm text-gray-500">Line: ${finding.lineNumber}</p>
+                        <div class="bg-gray-50 p-3 rounded mb-2">
+                            <pre class="text-sm overflow-x-auto">${finding.match}</pre>
+                            <p class="text-sm text-gray-500 mt-1">Line: ${finding.lineNumber}</p>
+                        </div>
                     `).join('')}
                 </div>
             ` : ''}
             ${vuln.dynamicAnalysis ? `
-                <div class="mt-2">
-                    <p class="font-semibold">Dynamic Analysis:</p>
-                    <p class="text-sm text-gray-500">Result: ${vuln.dynamicAnalysis.result}</p>
-                    ${vuln.dynamicAnalysis.error ? `<p class="text-sm text-red-500">Error: ${vuln.dynamicAnalysis.error}</p>` : ''}
+                <div class="mb-4">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Dynamic Analysis:</h3>
+                    <div class="bg-gray-50 p-4 rounded">
+                        <p class="text-sm mb-2">
+                            <span class="font-semibold">Result:</span> 
+                            <span class="${vuln.dynamicAnalysis.result === 'Vulnerable' ? 'text-red-500' : 'text-green-500'}">
+                                ${vuln.dynamicAnalysis.result}
+                            </span>
+                        </p>
+                        ${vuln.dynamicAnalysis.error ? `
+                            <p class="text-sm text-red-500">
+                                <span class="font-semibold">Error:</span> ${vuln.dynamicAnalysis.error}
+                            </p>
+                        ` : ''}
+                    </div>
                 </div>
             ` : ''}
             ${vuln.mitigation ? `
-                <div class="mt-2">
-                    <p class="font-semibold">Mitigation:</p>
-                    <ul class="list-disc list-inside">
+                <div class="mt-4">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Mitigation:</h3>
+                    <ul class="list-disc list-inside text-gray-600">
                         ${vuln.mitigation.map(m => `<li>${m}</li>`).join('')}
                     </ul>
                 </div>
             ` : ''}
             ${vuln.reference ? `
-                <div class="mt-2">
-                    <p class="font-semibold">Reference:</p>
+                <div class="mt-4">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Reference:</h3>
                     <a href="${vuln.reference}" target="_blank" class="text-blue-500 hover:underline">${vuln.reference}</a>
                 </div>
             ` : ''}
