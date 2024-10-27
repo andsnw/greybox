@@ -4,9 +4,11 @@
 
 ---
 
-# Greybox - Built during EthSydney Hackathon 2024
+# Greybox
 
 An extensible security assessment framework for Ethereum smart contracts. Detect vulnerabilities in your Solidity contracts from static and dynamic analysis.
+
+Built during EthSydney Hackathon 2024.
 
 ## How It Works
 
@@ -23,6 +25,11 @@ Upon execution, Greybox performs the following steps:
 3. **Result Compilation**: Combines static and dynamic results, filtering for confirmed vulnerabilities.
 
 The framework uses a modular approach with YAML templates for easy addition of new vulnerability checks. It leverages Hardhat for contract deployment and testing, providing a robust environment for dynamic analysis.
+
+This project currently supports testing for the following vulnerabilities:
+
+- Integer Overflow
+- Gas Limit Vulnerability
 
 ## Installation
 
