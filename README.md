@@ -1,3 +1,9 @@
+<div align="center">
+  <img src="logo/Greybox-darkbg.png" alt="Greybox Logo" width="300">
+</div>
+
+---
+
 # Greybox - Built during EthSydney Hackathon 2024
 
 An extensible security assessment framework for Ethereum smart contracts. Detect vulnerabilities in your Solidity contracts from static and dynamic analysis.
@@ -56,6 +62,12 @@ CONTRACT_PATH=<path_to_contract> npm run scan
 ```
 
 Replace `<path_to_contract>` with the local file path to the contract you want to scan.
+
+E.g.
+
+```
+CONTRACT_PATH=contracts/Overflow.sol npm run scan
+```
 
 ### Options
 
